@@ -20,6 +20,10 @@ html {
   scroll-behavior: smooth;
 }
 
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   overflow-x: hidden;

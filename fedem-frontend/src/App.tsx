@@ -1,4 +1,5 @@
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { BlogAdminProvider } from './context/BlogAdminContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -8,6 +9,7 @@ import Blog from './components/Blog';
 import Partners from './components/Partners';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import AdminDashboard from './components/AdminDashboard';
 
 function AppContent() {
   const { isDark } = useTheme();
@@ -27,6 +29,7 @@ function AppContent() {
         <Contact />
       </main>
       <Footer />
+      <AdminDashboard />
     </div>
   );
 }
@@ -34,7 +37,9 @@ function AppContent() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <BlogAdminProvider>
+        <AppContent />
+      </BlogAdminProvider>
     </ThemeProvider>
   );
 }

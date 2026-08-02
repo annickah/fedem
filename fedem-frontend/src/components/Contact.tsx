@@ -1,7 +1,8 @@
 import { motion, useInView } from 'motion/react';
 import { useRef, useState } from 'react';
-import { MapPin, Phone, Mail, Send, CheckCircle, Building } from 'lucide-react';
+import { ArrowUpRight, Building, CheckCircle, Mail, MapPin, Navigation, Phone, Send } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { CONTACT_INFO, SOCIAL_LINKS } from '../lib/constants';
 
 function FacebookIcon({ className }: { className?: string }) {
   return (
@@ -11,18 +12,8 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
-function LinkedinIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
-      <rect width="4" height="12" x="2" y="9" />
-      <circle cx="4" cy="4" r="2" />
-    </svg>
-  );
-}
-
 const offices = [
-  { city: 'Antananarivo', address: '3ème étage, Immeuble Héritage\nLot IVX 72 BIS F Ankazomanga', isMain: true },
+  { city: 'Antananarivo', address: CONTACT_INFO.address, isMain: true },
   { city: 'Bongolava', address: 'Vahalava nd-RAKOTOMAHEFA\nAndranomadio Tsiroanomandidy', isMain: false },
   { city: 'Anjozorobe', address: 'Résidence RABARIHOELA\nCentre-Ville', isMain: false },
   { city: 'Antsirabe', address: 'Immeuble Assurance MAMA', isMain: false },
@@ -34,6 +25,9 @@ export default function Contact() {
   const { isDark } = useTheme();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [website, setWebsite] = useState('');
 
   const glass = isDark
     ? 'bg-white/[0.04] backdrop-blur-xl border border-white/[0.06]'
@@ -41,43 +35,36 @@ export default function Contact() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Formulaire envoyé");
-    console.log(form);
-
+    setSubmitting(true);
+    setSubmitError('');
     try {
-        const response = await fetch("http://localhost:8000/api/contact", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                nom: form.name,
-                email: form.email,
-                sujet: form.subject,
-                message: form.message
-            })
-        });
-
-        const data = await response.json();
-
-        console.log(data);
-
-        setSubmitted(true);
-
-        setTimeout(() => setSubmitted(false), 4000);
-
-        setForm({
-            name: '',
-            email: '',
-            subject: '',
-            message: ''
-        });
-
+      const response = await fetch("http://localhost:8000/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nom: form.name,
+          email: form.email,
+          sujet: form.subject,
+          message: form.message,
+        }),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: string };
+      if (!response.ok) {
+        if (response.status === 404) throw new Error('Le formulaire sera disponible après le déploiement Vercel.');
+        throw new Error(payload.error || 'Envoi impossible.');
+      }
+      setSubmitted(true);
+      setForm({ name: '', email: '', subject: '', message: '' });
+      setWebsite('');
+      window.setTimeout(() => setSubmitted(false), 5000);
     } catch (error) {
-        console.error("Erreur envoi contact :", error);
+      setSubmitError(error instanceof Error ? error.message : 'Envoi impossible. Réessayez plus tard.');
+    } finally {
+      setSubmitting(false);
     }
-};
+  };
 
   const inputClass = `w-full px-4 py-3.5 rounded-xl text-sm transition-all focus:outline-none ${
     isDark
@@ -101,7 +88,7 @@ export default function Contact() {
             Entrez en <span className="bg-gradient-to-r from-fedem-500 to-fedem-400 bg-clip-text text-transparent">contact</span>
           </h2>
           <p className={`mt-6 max-w-2xl mx-auto text-lg ${isDark ? 'text-white/40' : 'text-gray-500'}`}>
-            Connecting communities and businesses through sustainable technology.
+            Retrouvez nos bureaux ou écrivez-nous pour échanger sur votre projet entrepreneurial.
           </p>
         </motion.div>
 
@@ -139,28 +126,36 @@ export default function Contact() {
 
             <div className={`${glass} rounded-2xl p-6 space-y-4`}>
               {[
-                { icon: Mail, label: 'Email', value: 'contact@fedem.mg' },
-                { icon: Phone, label: 'Téléphone', value: '+261 34 00 000 00' },
+                { icon: Mail, label: 'Email', value: CONTACT_INFO.email, href: `mailto:${CONTACT_INFO.email}` },
+                { icon: Phone, label: 'Téléphone', value: CONTACT_INFO.phone, href: CONTACT_INFO.phoneHref },
               ].map((c) => (
-                <div key={c.label} className="flex items-center gap-3">
+                <a key={c.label} href={c.href} className="group flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-fedem-600/15' : 'bg-fedem-50'}`}>
-                    <c.icon className={`w-5 h-5 ${isDark ? 'text-fedem-400' : 'text-fedem-600'}`} />
+                    <c.icon className={`w-5 h-5 transition-transform group-hover:scale-110 ${isDark ? 'text-fedem-400' : 'text-fedem-600'}`} />
                   </div>
                   <div>
                     <div className={`text-xs ${isDark ? 'text-white/40' : 'text-gray-400'}`}>{c.label}</div>
-                    <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{c.value}</div>
+                    <div className={`text-sm font-medium transition-colors ${isDark ? 'text-white group-hover:text-fedem-400' : 'text-gray-900 group-hover:text-fedem-600'}`}>{c.value}</div>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
 
             <div className={`${glass} rounded-2xl p-6`}>
               <h4 className={`text-sm font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Suivez-nous</h4>
               <div className="flex gap-3">
-                {[{ icon: FacebookIcon, label: 'Facebook' }, { icon: LinkedinIcon, label: 'LinkedIn' }].map((s) => (
+                {[
+                  {
+                    icon: FacebookIcon,
+                    label: 'Facebook',
+                    href: SOCIAL_LINKS.facebook,
+                  },
+                ].map((s) => (
                   <motion.a
                     key={s.label}
-                    href="#"
+                    href={s.href}
+                    target={s.href.startsWith('http') ? '_blank' : undefined}
+                    rel={s.href.startsWith('http') ? 'noreferrer' : undefined}
                     className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 ${
                       isDark
                         ? 'bg-white/5 border border-white/[0.06] text-white/50 hover:text-fedem-400 hover:bg-fedem-600/10'
@@ -221,19 +216,92 @@ export default function Contact() {
                     <label className={`block text-sm mb-2 font-medium ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Message</label>
                     <textarea name="message" value={form.message} onChange={(e) => setForm(p => ({ ...p, message: e.target.value }))} required rows={5} placeholder="Décrivez votre demande..." className={`${inputClass} resize-none`} />
                   </div>
+                  <div className="absolute -left-[9999px]" aria-hidden="true">
+                    <label>Site web<input tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></label>
+                  </div>
+                  {submitError && <p role="alert" className="rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-500">{submitError}</p>}
                   <motion.button
                     type="submit"
+                    disabled={submitting}
                     className="w-full sm:w-auto px-8 py-4 bg-fedem-600 hover:bg-fedem-500 text-white font-semibold rounded-xl transition-all duration-300 shadow-lg shadow-fedem-600/25 flex items-center justify-center gap-2"
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Send className="w-4 h-4" />Envoyer le message
+                    <Send className="w-4 h-4" />{submitting ? 'Envoi en cours...' : 'Envoyer le message'}
                   </motion.button>
                 </form>
               )}
             </div>
           </motion.div>
         </div>
+
+        {/* Headquarters map */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.42 }}
+          className={`mt-10 overflow-hidden rounded-[2rem] border ${
+            isDark ? 'border-white/[0.08] bg-white/[0.035]' : 'border-gray-200/70 bg-white shadow-lg shadow-gray-200/40'
+          }`}
+        >
+          <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
+            <div className="flex flex-col justify-center p-7 sm:p-10 lg:p-12">
+              <span className={`text-xs font-semibold uppercase tracking-[0.2em] ${isDark ? 'text-fedem-400' : 'text-fedem-700'}`}>
+                Localisation du siège
+              </span>
+              <h3 className={`mt-4 text-2xl font-bold sm:text-3xl ${isDark ? 'text-white' : 'text-gray-950'}`}>
+                FEDEM Madagascar à Ankazomanga
+              </h3>
+              <div className={`mt-6 flex items-start gap-3 text-sm leading-relaxed ${isDark ? 'text-white/50' : 'text-gray-600'}`}>
+                <MapPin className={`mt-0.5 h-5 w-5 shrink-0 ${isDark ? 'text-fedem-400' : 'text-fedem-700'}`} />
+                <address className="whitespace-pre-line not-italic">
+                  {CONTACT_INFO.address}
+                  {'\n'}
+                  {CONTACT_INFO.city}
+                </address>
+              </div>
+              <p className={`mt-5 text-xs leading-relaxed ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                Le repère cartographique indique Ankazomanga. Utilisez l’itinéraire pour rechercher directement l’adresse complète de l’Immeuble Héritage.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+                <a
+                  href={CONTACT_INFO.directionsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-fedem-600 px-5 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-fedem-500"
+                >
+                  <Navigation className="h-4 w-4" /> Obtenir l’itinéraire
+                </a>
+                <a
+                  href={CONTACT_INFO.mapUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition-colors ${
+                    isDark
+                      ? 'border-white/10 text-white/65 hover:border-fedem-500/40 hover:text-fedem-300'
+                      : 'border-gray-200 text-gray-600 hover:border-fedem-300 hover:text-fedem-700'
+                  }`}
+                >
+                  Voir la carte <ArrowUpRight className="h-4 w-4" />
+                </a>
+              </div>
+            </div>
+
+            <div className={`relative min-h-[360px] overflow-hidden lg:min-h-[480px] ${isDark ? 'bg-[#111714]' : 'bg-gray-100'}`}>
+              <iframe
+                src={CONTACT_INFO.mapEmbedUrl}
+                title="Carte interactive du siège de la FEDEM Madagascar à Ankazomanga"
+                className="absolute inset-0 h-full w-full border-0"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                sandbox="allow-scripts allow-same-origin allow-popups"
+              />
+              <div className="pointer-events-none absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold text-gray-700 shadow-md backdrop-blur-md">
+                Siège FEDEM, Ankazomanga
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

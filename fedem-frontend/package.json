@@ -9,8 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@vercel/blob": "^2.6.1",
+    "@vercel/node": "^5.9.2",
+    "appwrite": "^26.2.0",
+    "bcryptjs": "^3.0.3",
     "clsx": "2.1.1",
+    "firebase": "^12.16.0",
+    "jose": "^6.2.4",
     "lucide-react": "^1.27.0",
+    "mongodb": "^7.5.0",
     "motion": "^12.43.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",

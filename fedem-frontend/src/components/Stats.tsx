@@ -1,6 +1,7 @@
 import { motion, useInView } from 'motion/react';
 import { useRef, useEffect, useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useBlogAdmin } from '../context/BlogAdminContext';
 
 function Counter({ end, suffix, prefix = '', inView }: { end: number; suffix: string; prefix?: string; inView: boolean }) {
   const [count, setCount] = useState(0);
@@ -18,21 +19,11 @@ function Counter({ end, suffix, prefix = '', inView }: { end: number; suffix: st
   return <span>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
-const stats = [
-  { value: 75, suffix: '%', label: 'Agriculture', desc: 'de la population active' },
-  { value: 1.5, suffix: '%', prefix: '+', label: 'Croissance annuelle', desc: 'en 30 ans' },
-  { value: 86, suffix: '%', label: 'Population pauvre', desc: 'petites exploitations agricoles' },
-  { value: 26, suffix: '%', label: 'Part du PIB', desc: 'de la totalité du PIB' },
-  { value: 600, suffix: 'K', prefix: '+', label: 'Nouveaux actifs / an', desc: 'population active annuelle' },
-  { value: 2.5, suffix: 'M', label: 'Exploitations familiales', desc: "dominent l'agriculture" },
-  { value: 2000, suffix: 'K', prefix: '+', label: 'Riziculteurs', desc: 'ménages, 1.2M ha' },
-  { value: 400, suffix: 'USD', label: 'PIB / habitant', desc: 'par habitant' },
-];
-
 export default function Stats() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
   const { isDark } = useTheme();
+  const { siteSettings } = useBlogAdmin();
 
   return (
     <section ref={ref} className="relative py-24 overflow-hidden">
@@ -57,7 +48,7 @@ export default function Stats() {
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((s, i) => (
+          {siteSettings.stats.map((s, i) => (
             <motion.div
               key={s.label}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -73,7 +64,7 @@ export default function Stats() {
                 <Counter end={s.value} suffix={s.suffix} prefix={s.prefix} inView={isInView} />
               </div>
               <div className={`text-sm font-semibold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{s.label}</div>
-              <div className={`text-xs ${isDark ? 'text-white/30' : 'text-gray-400'}`}>{s.desc}</div>
+              <div className={`text-xs ${isDark ? 'text-white/30' : 'text-gray-400'}`}>{s.description}</div>
             </motion.div>
           ))}
         </div>

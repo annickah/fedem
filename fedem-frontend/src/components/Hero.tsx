@@ -3,6 +3,7 @@ import { ArrowDown } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { BG_LEAVES } from '../lib/constants';
 import OrganicMedia from './OrganicMedia';
+import BrandLogo from './BrandLogo';
 
 export default function Hero() {
   const { isDark } = useTheme();
@@ -52,21 +53,26 @@ export default function Hero() {
           {/* Left: Text */}
           <div>
             {/* Brand signal */}
-            <motion.p
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className={`mb-7 text-5xl font-black tracking-[-0.06em] sm:text-6xl xl:text-7xl ${
-                isDark ? 'text-white' : 'text-gray-900'
-              }`}
+              className="mb-7 flex items-center gap-5"
             >
-              FEDEM
-              <span className={`ml-3 font-serif text-2xl font-medium italic tracking-normal sm:text-3xl ${
-                isDark ? 'text-fedem-400' : 'text-fedem-600'
-              }`}>
-                Madagascar
+              <span className="flex h-24 w-28 shrink-0 items-center justify-center sm:h-28 sm:w-32">
+                <BrandLogo priority variant="mark" className="h-full w-full drop-shadow-lg" />
               </span>
-            </motion.p>
+              <span className={`text-5xl font-black tracking-[-0.06em] sm:text-6xl xl:text-7xl ${
+                isDark ? 'text-white' : 'text-slate-900'
+              }`}>
+                FEDEM
+                <span className={`block font-serif text-xl font-medium italic tracking-normal sm:text-2xl ${
+                  isDark ? 'text-fedem-400' : 'text-fedem-700'
+                }`}>
+                  Madagascar
+                </span>
+              </span>
+            </motion.div>
 
             {/* Heading */}
             <motion.h1

@@ -1,15 +1,17 @@
 import { motion, useInView } from 'motion/react';
 import { useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
-import { PARTNER_LOGOS } from '../lib/constants';
+import { useBlogAdmin } from '../context/BlogAdminContext';
 
 export default function Partners() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-60px' });
   const { isDark } = useTheme();
+  const { siteSettings } = useBlogAdmin();
 
   // Duplicate logos for infinite marquee
-  const logos = [...PARTNER_LOGOS, ...PARTNER_LOGOS, ...PARTNER_LOGOS, ...PARTNER_LOGOS];
+  const activePartners = siteSettings.partners.filter((partner) => partner.active);
+  const logos = [...activePartners, ...activePartners, ...activePartners, ...activePartners];
 
   return (
     <section ref={ref} className="relative py-20 overflow-hidden">
@@ -44,8 +46,11 @@ export default function Partners() {
 
         <div className="flex animate-marquee w-max">
           {logos.map((logo, i) => (
-            <div
+            <a
               key={`${logo.name}-${i}`}
+              href={logo.url}
+              target="_blank"
+              rel="noreferrer"
               className={`flex-shrink-0 mx-8 flex items-center justify-center w-48 h-24 rounded-2xl px-6 transition-all duration-300 ${
                 isDark
                   ? 'bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.08]'
@@ -53,11 +58,11 @@ export default function Partners() {
               }`}
             >
               <img
-                src={logo.src}
+                src={logo.image}
                 alt={logo.name}
                 className={`max-h-12 max-w-[140px] object-contain ${isDark ? 'brightness-0 invert opacity-50 hover:opacity-80' : 'opacity-60 hover:opacity-100'} transition-all duration-300`}
               />
-            </div>
+            </a>
           ))}
         </div>
       </motion.div>
