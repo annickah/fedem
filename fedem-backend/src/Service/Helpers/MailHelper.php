@@ -30,7 +30,7 @@ class MailHelper
     $mail = (new Email())
         ->from('mjannickah@gmail.com')
         ->replyTo($email)
-        ->to('mjannickah1@gmail.com')
+        ->to('mjannickah@gmail.com')
         ->subject('Nouveau contact reçu')
         ->text(
             "Nom : ".$nom.
