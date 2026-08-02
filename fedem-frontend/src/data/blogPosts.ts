@@ -1,7 +1,7 @@
 import { FEDEM_IMAGES } from '../lib/constants';
 
 export interface BlogPost {
-  id: number;
+  id: string;
   slug: string;
   title: string;
   excerpt: string;

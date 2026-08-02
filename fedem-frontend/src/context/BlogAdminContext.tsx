@@ -56,9 +56,9 @@ interface BlogAdminContextType {
   login: (email: string, credential: string, mode: 'password' | 'pin') => Promise<LoginResult>;
   logout: () => Promise<void>;
   savePost: (post: BlogPost) => Promise<void>;
-  deletePost: (id: number) => Promise<void>;
+  deletePost: (id: string) => Promise<void>;
   resetPosts: () => Promise<void>;
-  uploadImage: (file: File, postId: number, alt: string) => Promise<{ src: string; alt: string }>;
+  uploadImage: (file: File, postId: string, alt: string) => Promise<{ src: string; alt: string }>;
   refreshAdminData: () => Promise<void>;
   updateInquiry: (id: string, status: InquiryStatus, responseText: string, sendReply: boolean) => Promise<boolean>;
   saveSiteSettings: (settings: SiteSettings) => Promise<void>;
@@ -84,7 +84,7 @@ function sortPosts(posts: BlogPost[]) {
 }
 
 type ActualiteApi = {
-  id: number;
+  id: string;
   titre: string;
   contenu: string;
   resume: string | null;
@@ -254,14 +254,25 @@ export function BlogAdminProvider({ children }: { children: ReactNode }) {
       activatePreviewMode();
       return;
     }
-    const [dashboardResult, inquiriesResult, settingsResult] = await Promise.all([
+    if (!apiKeyRef.current) return;
+
+    const [dashboardResult, inquiriesResult, settingsResult] = await Promise.allSettled([
       apiRequest<{ metrics: DashboardMetrics }>('/api/admin/dashboard'),
-      apiRequest<{ inquiries: Inquiry[] }>('/api/inquiries'),
+      apiRequest<{ inquiries: Inquiry[] }>('/api/inquiries', {
+        headers: { 'X-API-KEY': apiKeyRef.current },
+      }),
       apiRequest<{ settings: SiteSettings }>('/api/site-settings'),
     ]);
-    setMetrics(dashboardResult.metrics);
-    setInquiries(inquiriesResult.inquiries);
-    setSiteSettings(settingsResult.settings);
+
+    if (dashboardResult.status === 'fulfilled') {
+      setMetrics(dashboardResult.value.metrics);
+    }
+    if (inquiriesResult.status === 'fulfilled') {
+      setInquiries(inquiriesResult.value.inquiries);
+    }
+    if (settingsResult.status === 'fulfilled') {
+      setSiteSettings(settingsResult.value.settings);
+    }
   }, [activatePreviewMode, backendMode]);
 
   useEffect(() => {
@@ -386,7 +397,7 @@ const savePost = useCallback(async (post: BlogPost) => {
     setStorageError('');
   }, [activatePreviewMode, backendMode, posts]);
 
-  const deletePost = useCallback(async (id: number) => {
+  const deletePost = useCallback(async (id: string) => {
     if (backendMode === 'preview') {
       const next = posts.filter((post) => post.id !== id);
       setPosts(next);
@@ -412,7 +423,7 @@ const resetPosts = useCallback(async () => {
     throw new Error("Réinitialisation non disponible : cette fonctionnalité n'existe pas encore côté serveur.");
   }, [backendMode]);
 
-  const uploadImage = useCallback(async (file: File, postId: number, alt: string) => {
+  const uploadImage = useCallback(async (file: File, postId: string, alt: string) => {
     if (!isAuthenticated) throw new Error('Session administrateur requise.');
     const optimized = await optimizeImage(file, 1800, 0.84);
     if (backendMode === 'preview') {
@@ -449,8 +460,10 @@ const resetPosts = useCallback(async () => {
       activatePreviewMode();
       return false;
     }
+    if (!apiKeyRef.current) throw new Error('Session administrateur requise.');
     const result = await apiRequest<{ success: boolean; responseSent: boolean }>(`/api/inquiries/${id}`, {
       method: 'PUT',
+      headers: { 'X-API-KEY': apiKeyRef.current },
       body: JSON.stringify({ status, responseText, sendReply }),
     });
     await refreshAdminData();
